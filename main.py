@@ -110,6 +110,8 @@ feature_importance_linear = calculate_permutation_importance(
     y_test
 )
 
+print(feature_importance_linear)
+
 shap_values, X_test_transformed, shap_feature_names = calculate_shap_values(
     model_linear,
     X_test
@@ -120,66 +122,10 @@ print("Quantidade de features:", len(shap_feature_names))
 print("Quantidade de observações:", shap_values.shape[0])
 print("Quantidade de features SHAP:", shap_values.shape[1])
 
-
-# Identifica municípios previstos abaixo da meta
-risco = X_test.copy()
-
-risco["taxa_prevista_2024"] = y_pred_linear
-
-risco["gap_previsto"] = (
-    risco["meta_alfabetizacao_2024"]
-    - risco["taxa_prevista_2024"]
-)
-
-risco = risco[
-    risco["taxa_prevista_2024"]
-    < risco["meta_alfabetizacao_2024"]
-].copy()
-
-
-# Seleciona o município com maior risco
-gap_mediano = risco["gap_previsto"].median()
-
-indice_risco = (
-    (risco["gap_previsto"] - gap_mediano)
-    .abs()
-    .idxmin()
-)
-
-municipio_risco = risco.loc[indice_risco]
-
-
-# Recupera a posição correspondente no SHAP
-indice_risco = X_test.index.get_loc(
-    municipio_risco.name
-)
-
-
-print("\nMunicípio selecionado para SHAP:")
-print(
-    f"Taxa prevista: "
-    f"{municipio_risco['taxa_prevista_2024']:.2f}%"
-)
-print(
-    f"Meta 2024: "
-    f"{municipio_risco['meta_alfabetizacao_2024']:.2f}%"
-)
-print(
-    f"Gap previsto: "
-    f"{municipio_risco['gap_previsto']:.2f} p.p."
-)
-
-
-# SHAP local
-explanation_risco = create_shap_explanation(
+plot_shap_summary(
     shap_values,
     X_test_transformed,
-    shap_feature_names,
-    indice_risco
-)
-
-plot_shap_waterfall(
-    explanation_risco
+    shap_feature_names
 )
 
 
